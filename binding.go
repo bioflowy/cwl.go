@@ -23,6 +23,7 @@ type Binding struct {
 // New constructs new "Binding".
 func (binding Binding) New(i interface{}) *Binding {
 	dest := new(Binding)
+	dest.Separate = true // default true
 	switch x := i.(type) {
 	case map[string]interface{}:
 		for key, v := range x {
