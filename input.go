@@ -236,6 +236,12 @@ func (input *Input) Flatten() []string {
 		if len(flattened) == 0 {
 			return flattened
 		}
+	case "boolean":
+		v := input.Provided.Raw.(bool)
+		if v {
+			flattened = append(flattened, input.Binding.Prefix)
+		}
+		return flattened
 	case "int":
 		flattened = append(flattened, fmt.Sprintf("%v", input.Provided.Int))
 	case "File":
@@ -270,7 +276,11 @@ func (input *Input) Flatten() []string {
 		flattened = append(flattened, fmt.Sprintf("%v", input.Provided.Raw))
 	}
 	if input.Binding != nil && input.Binding.Prefix != "" {
-		flattened = append([]string{input.Binding.Prefix}, flattened...)
+		if input.Binding.Separate {
+			flattened = append([]string{input.Binding.Prefix}, flattened...)
+		}else{
+			flattened = []string{input.Binding.Prefix + flattened[0]}
+		}
 	}
 
 	return flattened
