@@ -1,6 +1,7 @@
 package cwl
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 )
@@ -72,12 +73,40 @@ func (_ Entry) New(i interface{}) Entry {
 	}
 	return dest
 }
-
+func copyFileContents(src, dst string) (err error) {
+    in, err := os.Open(src)
+    if err != nil {
+        return
+    }
+    defer in.Close()
+    out, err := os.Create(dst)
+    if err != nil {
+        return
+    }
+    defer func() {
+        cerr := out.Close()
+        if err == nil {
+            err = cerr
+        }
+    }()
+    if _, err = io.Copy(out, in); err != nil {
+        return
+    }
+    err = out.Sync()
+    return
+}
+func linkOrCopy(src string,dist string) error {
+	err := os.Link(src, dist)
+	if err != nil {
+		return copyFileContents(src,dist)
+	}
+	return nil
+}
 // LinkTo creates hardlink of this entry under destdir.
 func (entry *Entry) LinkTo(destdir, srcdir string) error {
 	destpath := filepath.Join(destdir, filepath.Base(entry.Location))
 	if filepath.IsAbs(entry.Location) {
-		return os.Link(entry.Location, destpath)
+		return linkOrCopy(entry.Location, destpath)
 	}
-	return os.Link(filepath.Join(srcdir, entry.Location), destpath)
+	return linkOrCopy(filepath.Join(srcdir, entry.Location), destpath)
 }
