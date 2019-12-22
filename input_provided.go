@@ -38,6 +38,7 @@ func (provided Provided) EntryFromDictionary(dict map[interface{}]interface{}) (
 	}
 	class := dict["class"].(string)
 	location := dict["location"]
+	path := dict["path"]
 	contents := dict["contents"]
 	if class == "" && location == nil && contents == nil {
 		return nil, nil
@@ -49,6 +50,15 @@ func (provided Provided) EntryFromDictionary(dict map[interface{}]interface{}) (
 			return &Entry{
 				Class:    class,
 				Location: fmt.Sprintf("%v", location),
+				File:     File{},
+			}, nil
+		}
+		// If the path field is provided but the location field is not, 
+		// an implementation may assign the value of the path field to location
+		if path != nil {
+			return &Entry{
+				Class:    class,
+				Location: fmt.Sprintf("%v", path),
 				File:     File{},
 			}, nil
 		}

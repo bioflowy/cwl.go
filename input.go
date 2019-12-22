@@ -267,7 +267,7 @@ func (input *Input) Flatten() []string {
 			// TODO other case
 		}
 	default:
-		flattened = append(flattened, fmt.Sprintf("%v", input.Provided))
+		flattened = append(flattened, fmt.Sprintf("%v", input.Provided.Raw))
 	}
 	if input.Binding != nil && input.Binding.Prefix != "" {
 		flattened = append([]string{input.Binding.Prefix}, flattened...)
