@@ -245,7 +245,12 @@ func (input *Input) Flatten() []string {
 	case "int":
 		flattened = append(flattened, fmt.Sprintf("%v", input.Provided.Int))
 	case "File":
-		flattened = append(flattened, input.Provided.Entry.Location)
+		if input.Provided.Entry != nil {
+			flattened = append(flattened, input.Provided.Entry.Location)
+		} else if input.Provided.Raw != nil {
+			metadata := input.Provided.Raw.(map[string]interface{})
+			flattened = append(flattened, fmt.Sprintf("%v", metadata["path"]))
+		}
 	case "string":
 		switch v := input.Provided.Raw.(type) {
 		case string:
@@ -278,7 +283,7 @@ func (input *Input) Flatten() []string {
 	if input.Binding != nil && input.Binding.Prefix != "" {
 		if input.Binding.Separate {
 			flattened = append([]string{input.Binding.Prefix}, flattened...)
-		}else{
+		} else {
 			flattened = []string{input.Binding.Prefix + flattened[0]}
 		}
 	}

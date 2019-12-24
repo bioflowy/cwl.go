@@ -171,15 +171,52 @@ func (outs Outputs) Dump(vm *otto.Otto, dir string, stdout, stderr string, w io.
 			}
 			// TODO: do we need integrate all the outputs?
 		}
-		if err := o.DumpFileMeta(dest, dir, stdout, stderr, w); err != nil {
+		if err := o.DumpFileMeta(dest, dir, stdout, stderr); err != nil {
 			return err
 		}
 	}
 	return jsonindent.NewEncoder(w).Encode(dest)
 }
 
+// Dump ...
+func (outs Outputs) GetMetadata(vm *otto.Otto, dir string, stdout, stderr string) (map[string]interface{}, error) {
+
+	dest := map[string]interface{}{}
+	for _, o := range outs {
+		if o.Binding != nil && o.Binding.Eval != nil && vm != nil {
+			js, err := o.Binding.Eval.ToJavaScriptString()
+			if err != nil {
+				return nil, err
+			}
+			v, err := vm.Run(js)
+			if err != nil {
+				return nil, err
+			}
+			switch {
+			case v.IsNumber():
+				dest[o.ID], err = v.ToInteger()
+				if err != nil {
+					return nil, err
+				}
+			case v.IsString():
+				dest[o.ID], err = v.ToString()
+				if err != nil {
+					return nil, err
+				}
+			default:
+				// TODO: more type switch
+			}
+			// TODO: do we need integrate all the outputs?
+		}
+		if err := o.DumpFileMeta(dest, dir, stdout, stderr); err != nil {
+			return nil, err
+		}
+	}
+	return dest, nil
+}
+
 // DumpFileMeta ...
-func (o Output) DumpFileMeta(dest map[string]interface{}, dir string, stdout, stderr string, w io.Writer) error {
+func (o Output) DumpFileMeta(dest map[string]interface{}, dir string, stdout, stderr string) error {
 
 	// This output should not be dumped
 	if o.Binding != nil && o.Binding.LoadContents {
@@ -270,4 +307,12 @@ func getFileMetaData(targetfilepath string) (map[string]interface{}, error) {
 		"class":    "File",
 		"size":     info.Size(),
 	}, nil
+}
+
+type FileMetaData struct {
+	checksum string
+	basename string
+	location string
+	path     string
+	class    string
 }
